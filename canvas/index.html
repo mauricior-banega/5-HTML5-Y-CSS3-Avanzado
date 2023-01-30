@@ -1,0 +1,74 @@
+<!--
+
+    5-5-HTML5 Avanzado (Curso VideotuBrain) - Todos los videos estan en carpeta: videos - Desde el nº 01_01_00 hasta 04_01_00.
+
+Videos/Temas contenidos del Dashboard: 
+       
+-En este practico crearemos una pagina web dinamica que mediante HTML5/Javascript/jQuery y Canvas realizaremos un editor de imagenes con multiples funcionalidades.
+
+ACLARACIONES: 
+
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de imagen - Canvas</title>
+
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript">
+
+        //Creamos estas variables que usaremos luego para los ejes en la codif del Canvas.
+        var x = 240;
+        var y = 240;
+
+        $(document).ready(inicio);
+
+        function inicio()
+        {
+            animar();
+        }
+
+        function animar()
+        {
+            //alert("Hola"); 
+            //Con este alert funcionando, verificamos si jquery esta funcionando/cargado correctamente.
+
+            //Creamos canvas y contexto, estas dos lineas permiten indicarle a la web que crearemos una imagen 2d dentro de el (rectangulo rojo).
+            var canvas = document.getElementById("lienzo");
+            var contexto = canvas.getContext("2d"); //Creamos el contexto
+
+            contexto.clearRect(); //Esto borra lo pintado por el rectangulo animado. Dando el efecto de movimiento sin dejar rastro del anterior.
+
+            contexto.fillStyle="rgb(255,0,0)"; //Relleno de color rojo del contexto.
+
+            contexto.fillRect(x,y,30,30); //Creamos un rectangulo. al que le llegara el color rojo. Aqui se utiliza las coordenadas en x e y, y 30/30 indica el alto/ancho.
+
+            /*x++; y++; Incrementa la posicion del rectangulo haciendo la "animacion" de dezplazamiento mediante canvas y js. Comentamos
+            */
+
+            //Ahora; con estas funciones haremos que el rectangulo se desplaze de forma aleatoria, tomando valores entre -5 y 5 en x e y.
+            
+            x = x+(Math.round((Math.random()*10))-5);
+            y = y+(Math.round((Math.random()*10))-5);
+
+            setTimeout("animar()",1000); //Ejecuta la F(animar) cada segundo. Unidad en miliseg.
+        }
+    </script>
+
+    <style type="text/css">
+        canvas
+        {
+            border:1px solid black;
+        }
+    </style>
+
+
+</head>
+<body>
+    <canvas id="lienzo" width="500px" height="500px"></canvas>
+</body>
+</html>

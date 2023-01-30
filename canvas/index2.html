@@ -1,0 +1,551 @@
+<!--
+
+    5-5-HTML5 Avanzado (Curso VideotuBrain) - Todos los videos estan en carpeta: videos - Desde el nº 01_01_00 hasta 04_01_00.
+
+Videos/Temas contenidos del Dashboard: 
+       
+-En este practico crearemos una pagina web dinamica que mediante HTML5/Javascript/jQuery y Canvas realizaremos un editor de imagenes con multiples funcionalidades.
+
+ACLARACIONES: 
+
+-Creamos otro index (index2) para ejemplificar usos y funcionalidades JS/CSS.
+
+(1*) - Al ejecutar el index2, donde queremos aparecer la imagen "tomates" en el liezo, este NO se muestra. Y es por una falla del Canvas, originada al intentar dibujar imagenes de bit map (fotos), y no cuando dibuja imagenes geometricas comunes. Para ello usamos un setTimeout para poder cargarla y se vea. Luego ayuda mas a que se carga poniendo otro setTimeout.
+
+-Esto sucede porque Canvas se ejecuta mas rapido de lo que la imagen se puede cargar, osea ejecuta la imagen antes de que este cargada para ser mostrada, es por eso que con ese atrazo de 500 milisegundos, si la muestra luego. De 100 no cargaba.
+(2*) - Verifico que el codigo Selector de ID para un option/value del practico no funciona Ejemplo: if($("#archivo").attr("value") == ("nuevo")). Por ello es que se cambiara a la estructura compatible que queda registrada funcionando. Esto se aplica a los metodos de las funciones "archivo" y "efectos".
+(3*) - Varias cosas por indicar de esta funcion:
+     1 -No funciona como deberia. El codigo del video es obsoleto. Por ello se busco varias maneras y esta es la mejor encontrada.
+     2 - Si bien realiza la descarga, lo hace sin reconocer el formato indicado (png). Por ello es que windows no sabe como interpretarlo.
+(4*) DEGRADADO DE COLOR - Para poner el Gradiente, busca la pagina de Mozilla y Googlea "CSS3 GRADIENT GENERATOR" (colorzilla). Ahi selecciona uno y copia el codigo css3 que luego podra como propiedad para el nav y otros elementos del archivo.
+(5*) Luego creamos el archivp PHP upload del cual nos permitira abrir nuevas imagenes, que se cargaran en la carpeta creada en canvas "imagenes". Modificamos el llamado en HTML de la imagen "tomates" a "imagenes/inicial.jpg". Sucede internamente que en esa carpeta se alojara la imagen con la que trabajemos, luego si abrimos otra esta se va y se cargara la nueva imagen en dicha carpeta.
+(6*) Tambien el codigo para crear el reconocimiento de voz, el input esta obsoleto, buscare alguno que funcione pero la estructura esta completa. Al hablar deberia de escribirse el efecto que interprete y se aplicaria a la imagen cargada, si se repitiese el efecto este se quitaria.
+(7*) Por ultimo, explica el funcionamiento de los workers. Como pueden dividirse las tareas de ejecusion de un proyecto en base a la cantidad de nucleos que pueda tener nuestro CPU. La idea es que puedan realizarse tantos workers como tenga de hilos el procesador, y esto podremos verlo desde el Administrador de tareas.
+
+-->
+!
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de imagen - Canvas</title>
+
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(inicio);
+
+        function inicio()
+        {
+            setTimeout("dibujar()", 500); //(1*)
+            setTimeout("dibujar()", 1000);
+
+            $("#archivo").change(archivo);
+             
+            $("#efectos").change(efectos);//Cuandon el id sea "efectos" ejecuta la F(efectos)
+
+            
+        }  
+
+        
+        /* FUNCION AL APRETAR "NUEVO"
+        -Decimos que si el atributo de se elemento es "nuevo" entonces que haga algo, que sera pasar la imagen a blanco.
+        (2*)(3*)
+        */
+        function archivo(){
+
+            
+                if($("#archivo").val()=="nuevo"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					contexto.clearRect(0,0,300,300);
+				}
+                
+                if($("#archivo").val()=="abrir"){
+					$("body").append("<form method='POST' action='upload.php' enctype='multipart/form-data'><input type='file' name='archivo'><input type='submit'></form>'");
+				}
+
+                if($("#archivo").val()=="guardar"){ //(3*)
+					
+                    var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+                    
+                    var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  
+
+                    window.location.href=image;
+                    
+                    //window.location.href = canvas.toDataURL("image/png"); Esta linea esta obsoleta
+                
+                    }
+                
+    
+        }
+            /*FUNCION DE ROCONOCIMIENTO VOCAL (6*)*/
+            
+
+        function reconocimientovocal(){
+
+            
+
+				if($("#vocal").attr("value") == "negativo"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+					var data = imageData.data;
+					for(var i=0;i<data.length;i+=4){
+						data[i] = 255 - data[i];
+						data[i+1] = 255 - data[i+1];
+						data[i+2] = 255 - data[i+2];
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+				if($("#vocal").attr("value") == "aclarar"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+					var data = imageData.data;
+					for(var i=0;i<data.length;i+=4){
+						data[i] = data[i] + 100;
+						data[i+1] = data[i+1] + 100;
+						data[i+2] = data[i+2] + 100;
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+				if($("#vocal").attr("value") == "oscurecer"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+					var data = imageData.data;
+					for(var i=0;i<data.length;i+=4){
+						data[i] = data[i] - 100;
+						data[i+1] = data[i+1] - 100;
+						data[i+2] = data[i+2] - 100;
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+				if($("#vocal").attr("value") == "escalagrises"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+					var data = imageData.data;
+					for(var i=0;i<data.length;i+=4){
+						data[i] = (data[i] + data[i+1] + data[i+2])/3;
+						data[i+1] = (data[i] + data[i+1] + data[i+2])/3;
+						data[i+2] = (data[i] + data[i+1] + data[i+2])/3;
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+				if($("#vocal").attr("value") == "solarizar"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+					var data = imageData.data;
+					for(var i=0;i<data.length;i+=4){
+						if(data[i] < 122){data[i] = 0}else{data[i] = 255}
+						if(data[i+1] < 122){data[i+1] = 0}else{data[i+1] = 255}
+						if(data[i+2] < 122){data[i+2] = 0}else{data[i+2] = 255}
+					
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+			}
+
+
+
+
+        function efectos(){ //(3*)
+
+
+				if($("#efectos").val() == "negativo"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+                    var data = imageData.data;
+
+                    for(var i=0; i<data.length; i+=4) 
+                    {
+                        data[i] = 255 - data[i];
+                        data[i+1] = 255 - data[i+1];
+                        data[i+2] = 255 - data[i+2];
+                    }
+                    contexto.putImageData(imageData,0,0);
+				}
+
+                if($("#efectos").val() == "aclarar"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+                    var data = imageData.data;
+
+                    for(var i=0; i<data.length; i+=4)
+                    {
+                        data[i] = data[i] +100;
+                        data[i+1] = data[i+1] +100;
+                        data[i+2] =  data[i+2] +100;
+                    }
+                    contexto.putImageData(imageData,0,0);
+				}
+
+                if($("#efectos").val() == "oscurecer"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+                    var data = imageData.data;
+
+                    for(var i=0; i<data.length; i+=4)
+                    {
+                        data[i] = data[i] - 100;
+                        data[i+1] = data[i+1] - 100;
+                        data[i+2] =  data[i+2] - 100;
+                    }
+                    contexto.putImageData(imageData,0,0);
+				}
+
+                if($("#efectos").val() == "escala de grises"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+                    var data = imageData.data;
+
+                    for(var i=0; i<data.length; i+=4)
+                    {
+                        data[i] = (data[i] + data[i+1] + data[2])/3;
+                        data[i+1] = (data[i] + data[i+1] + data[2])/3;
+                        data[i+2] =  (data[i] + data[i+1] + data[2])/3;
+                    }
+                    contexto.putImageData(imageData,0,0);
+				}
+
+                if($("#efectos").val() == "solarizar"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,500,500);
+                    var data = imageData.data;
+
+                    for(var i=0; i<data.length; i+=4)
+                    {
+                    if(data[i]<122){data[i]=0} else{(data[i] = 255)}
+                    if(data[i+1]<122){data[i+1]=0} else{(data[i+1] = 255)}
+                    if(data[i+2]<122){data[i+2]=0} else{(data[i+2] = 255)}
+                    }
+                    contexto.putImageData(imageData,0,0);
+				}
+
+                if($("#efectos").val() == "desenfocar"){
+					var canvas = document.getElementById("lienzo");
+					var contexto = canvas.getContext("2d");
+					var imageData = contexto.getImageData(0,0,300,300);
+					var data = imageData.data;
+
+					for(var i=0;i<data.length;i+=4){
+						
+                        var radio = 80;
+						//var temp;
+						for(var componente=0;componente<3;componente++){
+							
+                            var temp=0;
+
+							for(var x=0;x<=(radio*4);x+=4){
+
+								for(var y=0;y<=(radio*1200);y+=1200){
+
+									temp += data[i + componente + x + y];
+								}
+							}
+							data[i + componente] = temp/(radio*radio);
+						}
+					}
+					contexto.putImageData(imageData,0,0)
+				}
+
+    
+        }
+
+        function dibujar()
+        {
+            
+            //Creamos canvas y contexto, estas dos lineas permiten indicarle a la web que crearemos una imagen 2d dentro de el (rectangulo rojo).
+            var canvas = document.getElementById("lienzo");
+            var contexto = canvas.getContext("2d"); //Creamos el contexto
+
+            //Cargamos la imagen 
+            var img = new Image(); 
+            img.src = "imagenes/inicial.jpg";
+            contexto.drawImage(img,10,10);
+
+            //Recogemos todos los datos de la img que hay desde inicio a fin del lienzo.
+            var imageData = contexto.getImageData(0,0,500,500);
+            var data = imageData.data;
+
+            /* -------------------------------------------
+            ALGORITMO DE INVERSION DE COLORES (NEGATIVO)
+
+            -Mediante este ciclo, iremos pixel a pixel modificandolo a gris a c/u = 120.
+            -Luego muestra que para que quede en negativo la imagen, osea la inversa del color tiene que estar en -255.
+
+            //FILTRO DE PIXELES. Estos valores variaran para dar las propiedades de edicion en cada caso.
+
+            for(var i=0; i<data.length; i+=4) 
+            {
+                data[i] = 255 - data[i];
+                data[i+1] = 255 - data[i+1];
+                data[i+2] = 255 - data[i+2];
+            }
+
+            */
+
+            /* -------------------------------------------
+            ALGORITMO DE AGREGACION DE BRILLO (ACLARAR)
+            -Mediante el agregado de 100px a cada pixel del rgb.
+
+            
+            for(var i=0; i<data.length; i+=4)
+            {
+                data[i] = data[i] +100;
+                data[i+1] = data[i+1] +100;
+                data[i+2] =  data[i+2] +100;
+            }
+
+            */
+
+            /* -------------------------------------------
+            ALGORITMO DE OSCURECER
+            -Mediante la sustraccion de 100px a cada pixel del rgb. Logramos darle mas oscuridad a la foto.
+            
+            
+            for(var i=0; i<data.length; i+=4)
+            {
+                data[i] = data[i] - 100;
+                data[i+1] = data[i+1] - 100;
+                data[i+2] =  data[i+2] - 100;
+            }
+            */
+
+            /* -------------------------------------------
+            ALGORITMO DE ESCALA A GRISES
+            -Cambia la imagen a un tono casi gris de cada pixel.
+            
+            for(var i=0; i<data.length; i+=4)
+            {
+                data[i] = (data[i] + data[i+1] + data[2])/3;
+                data[i+1] = (data[i] + data[i+1] + data[2])/3;
+                data[i+2] =  (data[i] + data[i+1] + data[2])/3;
+            }
+            */
+
+            /* -------------------------------------------
+            ALGORITMO DE MEZCLA ENTRE EFECTO UMBRAL Y SOLARIZAR
+            -Este efecto logra resumir los colores poniendo al maximo y al minimo de cada pixel.
+            
+            
+            for(var i=0; i<data.length; i+=4)
+            {
+            if(data[i]<122){data[i]=0} else{(data[i] = 255)}
+            if(data[i+1]<122){data[i+1]=0} else{(data[i+1] = 255)}
+            if(data[i+2]<122){data[i+2]=0} else{(data[i+2] = 255)}
+            }
+            */
+            
+
+            contexto.putImageData(imageData,0,0); //Devuelve la imagen con la edicion aplicada.
+
+
+        }
+
+         
+    </script>
+
+    <style type="text/css">
+        canvas
+        {
+            border:0px solid black; 
+            float: left;
+            height: 300px;
+            background:white;
+            box-shadow:0px 0px 25px rgba(0,0,0,0.5) inset; /*Con inset indicamos que la sombra se aplique hacia dentro.*/
+        }
+
+        
+
+        #herramientas
+        {
+            width: 50px;
+            height: 300px;
+            border:0px solid black;
+            /*Si dejamos solo asi, el div empuja la imagen abajo, entonces creamos el float.*/
+            float:left;
+            background: grey;
+
+            /* (4*) DEGRADADO DE COLOR */
+            background: #ebf1f6; /* Old browsers */
+            background: -moz-linear-gradient(top,  #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+
+            
+
+        }
+
+        #dialogos
+        {
+            width: 200px;
+            height: 300px;
+            border:0px solid black;
+            /*Si dejamos solo asi, el div empuja la imagen abajo, entonces creamos el float.*/
+            float:left;
+            background: grey;
+
+            /* (4*) DEGRADADO DE COLOR*/
+            background: #ebf1f6; /* Old browsers */
+            background: -moz-linear-gradient(top,  #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+        }
+        
+        nav
+        {
+            width: 544px;
+            height: 22px;
+            background: grey;
+            padding: 3px 3px 3px;
+            margin-bottom: 2px;
+
+            /* (4*) DEGRADADO DE COLOR*/
+            background: #ebf1f6; /* Old browsers */
+            background: -moz-linear-gradient(top,  #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+
+        }
+
+        select
+        {
+            background:grey;
+            color:white;
+            padding: 0px;
+            margin: 0px;
+            border:0px solid white;
+        }
+
+        #contenedor
+        {
+            margin:auto;
+            width: 550px;
+        }
+
+        body
+        {
+				background:white;
+				font-family:arial;
+				background: -moz-linear-gradient(top,  rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 100%); /* FF3.6+ */
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.65)), color-stop(100%,rgba(0,0,0,0))); /* Chrome,Safari4+ */
+                background: -webkit-linear-gradient(top,  rgba(0,0,0,0.65) 0%,rgba(0,0,0,0) 100%); /* Chrome10+,Safari5.1+ */
+                background: -o-linear-gradient(top,  rgba(0,0,0,0.65) 0%,rgba(0,0,0,0) 100%); /* Opera 11.10+ */
+                background: -ms-linear-gradient(top,  rgba(0,0,0,0.65) 0%,rgba(0,0,0,0) 100%); /* IE10+ */
+                background: linear-gradient(to bottom,  rgba(0,0,0,0.65) 0%,rgba(0,0,0,0) 100%); /* W3C */
+                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
+
+			}
+
+        footer
+        {
+            background: grey;
+            margin-top: 6px;
+            padding:3px;
+            color:black;
+            font-size: 8px;
+
+            /* (4*) */
+            background: -moz-linear-gradient(top,  #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%);
+            background: -webkit-linear-gradient(top,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); 
+            background: linear-gradient(to bottom,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); 
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); 
+            
+        }
+
+        .herramienta
+        {
+            width: 45px;
+            height: 45px;
+            border: 0px solid black;
+            margin-bottom: 3px;
+            margin-left: 1px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+            border-radius: 5px;
+
+            /* (4*) DEGRADADO DE COLOR*/
+            background: #ebf1f6; /* Old browsers */
+            background: -moz-linear-gradient(top,  #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%); /* FF3.6-15 */
+            background: -webkit-linear-gradient(top,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Chrome10-25,Safari5.1-6 */
+            background: linear-gradient(to bottom,  #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+        }
+
+        .panel{
+				width:98%;
+				height:150px;
+				border:0px solid black;
+				margin-bottom:3px;
+				margin-left:2px;
+				box-shadow:0px 0px 10px rgba(0,0,0,0.5);
+				border-radius:5px;
+				background: #ebf1f6; /* Old browsers */
+				background: -moz-linear-gradient(top, #ebf1f6 0%, #abd3ee 50%, #89c3eb 51%, #d5ebfb 100%); /* FF3.6+ */
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ebf1f6), color-stop(50%,#abd3ee), color-stop(51%,#89c3eb), color-stop(100%,#d5ebfb)); /* Chrome,Safari4+ */
+				background: -webkit-linear-gradient(top, #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Chrome10+,Safari5.1+ */
+				background: -o-linear-gradient(top, #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* Opera 11.10+ */
+				background: -ms-linear-gradient(top, #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* IE10+ */
+				background: linear-gradient(to bottom, #ebf1f6 0%,#abd3ee 50%,#89c3eb 51%,#d5ebfb 100%); /* W3C */
+				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
+			}
+
+
+    </style>
+
+
+</head>
+<body>
+    <div id="contenedor">
+    <nav> 
+        <select id="archivo">
+            <option value="">Archivo</option>
+            <option value="nuevo">Nuevo</option>
+            <option value="abrir">Abrir</option>
+            <option value="guardar">Guardar</option>
+            <option value="cerrar">Cerrar</option>
+        </select>
+
+        <select id="efectos">
+            <option value="">Efectos</option>
+            <option value="negativo">Negativo</option>
+            <option value="aclarar">Aclarar</option>
+            <option value="oscurecer">Oscurecer</option>
+            <option value="escala de grises">Escala de grises</option>
+            <option value="solarizar">Solarizar</option>
+            <option value="desenfocar">Desenfocar</option>
+        </select>
+        
+        <!--(6*)-->
+        <input type="text" x-webkit-speech id="vocal" onwebkitspeechchange="reconocimientovocal()">
+    </nav>
+    <div id="herramientas">
+        <div class="herramienta"></div>
+        <div class="herramienta"></div>
+        <div class="herramienta"></div>
+        <div class="herramienta"></div>
+    </div>
+    <canvas id="lienzo" width="295px" height="295px"></canvas>
+    <div id="dialogos">
+        <div class="panel"></div>
+        <div class="panel"></div>
+    </div>
+    <footer>Retocador de imagenes © - 2023 Mauricio Banega </footer>
+    </div>
+    
+</body>
+</html>
